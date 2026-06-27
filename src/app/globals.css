@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* ── Design tokens ── */
+:root {
+  --bg:        #fafafa;
+  --bg-sub:    #f0f0f0;
+  --surface:   #ffffff;
+  --surface-2: #f5f5f5;
+  --border:    rgba(0,0,0,0.08);
+  --border-2:  rgba(0,0,0,0.05);
+  --text-1:    #191919;
+  --text-2:    #6b6b6b;
+  --text-3:    #9b9b9b;
+  --accent:    #e8520a;
+  --accent-2:  #ff6b35;
+}
+
+.dark {
+  --bg:        #111111;
+  --bg-sub:    #0a0a0a;
+  --surface:   #181818;
+  --surface-2: #282828;
+  --border:    rgba(255,255,255,0.08);
+  --border-2:  rgba(255,255,255,0.04);
+  --text-1:    #ffffff;
+  --text-2:    #b3b3b3;
+  --text-3:    #6b6b6b;
+  --accent:    #ff6b35;
+  --accent-2:  #ff8c5a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  transition: background 0.15s, color 0.15s;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
