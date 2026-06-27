@@ -1,79 +1,67 @@
 'use client';
-import { motion } from 'framer-motion';
-import { FoodItem } from '@/lib/types';
-import { ChevronDown, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+import { FoodItem } from '@/lib/types';
 import { scaledItem } from '@/lib/nutrition';
 
-interface Props {
-  item: FoodItem;
-  index: number;
-  multiplier: number;
-}
+interface Props { item: FoodItem; index: number; multiplier: number; }
 
 export default function FoodItemCard({ item, index, multiplier }: Props) {
   const [open, setOpen] = useState(false);
-  const scaled = scaledItem(item, multiplier);
+  const s = scaledItem(item, multiplier);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.07, duration: 0.35 }}
-      className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 overflow-hidden"
-    >
-      <button
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 dark:from-orange-500/20 dark:to-amber-500/10 flex items-center justify-center text-lg shrink-0">
-          🍽️
-        </div>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="rounded-xl overflow-hidden border"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+
+      <button className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors"
+        style={{ background: 'transparent' }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        onClick={() => setOpen(o => !o)}>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{item.name}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">{item.portionEstimate}</p>
+          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{item.name}</p>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{item.portionEstimate}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-sm font-bold text-orange-500 dark:text-orange-400">{scaled.calories} kcal</span>
-          <ChevronDown
-            size={14}
-            className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
-          />
+          <span className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{s.calories} kcal</span>
+          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`}
+            style={{ color: 'var(--text-3)' }} />
         </div>
       </button>
 
       {open && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="px-4 pb-4"
-        >
-          <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="px-4 pb-4 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="grid grid-cols-3 gap-2 mt-3">
             {[
-              { label: 'Protein', value: scaled.protein, unit: 'g', color: 'text-blue-500' },
-              { label: 'Carbs', value: scaled.carbs, unit: 'g', color: 'text-amber-500' },
-              { label: 'Fat', value: scaled.fat, unit: 'g', color: 'text-rose-500' },
-            ].map((m) => (
-              <div key={m.label} className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2.5 text-center">
-                <p className={`text-sm font-bold ${m.color}`}>{m.value}{m.unit}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">{m.label}</p>
+              { label: 'Protein', value: s.protein, color: '#3b82f6' },
+              { label: 'Carbs',   value: s.carbs,   color: '#f59e0b' },
+              { label: 'Fat',     value: s.fat,      color: '#f43f5e' },
+            ].map(m => (
+              <div key={m.label} className="rounded-lg p-2.5 text-center"
+                style={{ background: 'var(--surface-2)' }}>
+                <p className="text-sm font-bold mb-0.5" style={{ color: m.color }}>{m.value}g</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{m.label}</p>
               </div>
             ))}
           </div>
-
           {item.hiddenIngredients.length > 0 && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-              <AlertCircle size={13} className="text-amber-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-0.5">Hidden Ingredients</p>
-                <p className="text-xs text-amber-600/80 dark:text-amber-400/80">
-                  {item.hiddenIngredients.join(', ')}
-                </p>
-              </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider self-center mr-1" style={{ color: 'var(--text-3)' }}>
+                Hidden:
+              </span>
+              {item.hiddenIngredients.map(ing => (
+                <span key={ing} className="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--accent)' }}>
+                  {ing}
+                </span>
+              ))}
             </div>
           )}
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );

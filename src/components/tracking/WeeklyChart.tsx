@@ -1,57 +1,38 @@
 'use client';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, ReferenceLine } from 'recharts';
 import { formatDateShort } from '@/lib/utils';
 import { DAILY_TARGETS } from '@/lib/types';
 
-interface Props {
-  data: { date: string; calories: number }[];
-}
-
-export default function WeeklyChart({ data }: Props) {
+export default function WeeklyChart({ data }: { data: { date: string; calories: number }[] }) {
   const today = new Date().toISOString().split('T')[0];
+  const max = Math.max(...data.map(d => d.calories), DAILY_TARGETS.calories);
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 p-5">
+    <div className="p-5 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
       <div className="flex items-center justify-between mb-5">
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Weekly Calories</p>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
-          <div className="w-2 h-2 rounded-full border border-dashed border-slate-300 dark:border-slate-600" />
-          {DAILY_TARGETS.calories} kcal target
+        <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>WEEKLY CALORIES</p>
+        <div className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-3)' }}>
+          <div className="w-4 h-px border-t border-dashed" style={{ borderColor: 'var(--text-3)' }} />
+          {DAILY_TARGETS.calories.toLocaleString()} target
         </div>
       </div>
-      <div className="h-40">
+      <div className="h-36">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barSize={18}>
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatDateShort}
-              tick={{ fontSize: 10, fill: 'var(--muted)' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis hide />
+          <BarChart data={data} barSize={24} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+            <XAxis dataKey="date" tickFormatter={formatDateShort}
+              tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+            <YAxis hide domain={[0, max * 1.1]} />
+            <ReferenceLine y={DAILY_TARGETS.calories} stroke="var(--text-3)" strokeDasharray="4 3" strokeWidth={1} />
             <Tooltip
-              formatter={(v) => [typeof v === 'number' ? `${v} kcal` : `${v}`, 'Calories']}
-              labelFormatter={(label) => formatDateShort(String(label))}
-              contentStyle={{
-                background: 'var(--card)',
-                border: '1px solid var(--card-border)',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
+              formatter={(v) => [typeof v === 'number' ? `${v.toLocaleString()} kcal` : v, 'Calories']}
+              labelFormatter={l => formatDateShort(String(l))}
+              contentStyle={{ background: 'var(--surface-2)', border: 'none', borderRadius: '8px', fontSize: '12px', color: 'var(--text-1)' }}
+              cursor={{ fill: 'var(--border)' }}
             />
             <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
-              {data.map((entry) => (
-                <Cell
-                  key={entry.date}
-                  fill={
-                    entry.date === today
-                      ? '#f97316'
-                      : entry.calories >= DAILY_TARGETS.calories
-                      ? '#f43f5e'
-                      : '#94a3b8'
-                  }
-                  fillOpacity={entry.date === today ? 1 : 0.6}
+              {data.map(d => (
+                <Cell key={d.date}
+                  fill={d.date === today ? 'var(--accent)' : d.calories >= DAILY_TARGETS.calories ? '#ef4444' : 'var(--surface-2)'}
                 />
               ))}
             </Bar>

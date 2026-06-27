@@ -19,17 +19,18 @@ const labels: Record<number, string> = {
 
 export default function PortionAdjuster({ value, onChange }: Props) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-5 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Portion Size</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">Adjust to match how much you actually ate</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Portion Size</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Adjust to match how much you ate</p>
         </div>
         <motion.div
           key={value}
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          className="px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-bold"
+          initial={{ scale: 0.8, opacity: 0.5 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="px-3 py-1 rounded-lg text-sm font-bold"
+          style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--accent)' }}
         >
           {labels[value] ?? `${value}×`}
         </motion.div>
@@ -43,15 +44,19 @@ export default function PortionAdjuster({ value, onChange }: Props) {
         onValueChange={([v]) => onChange(v)}
         className="relative flex items-center select-none touch-none w-full h-5"
       >
-        <Slider.Track className="bg-slate-200 dark:bg-slate-700 relative grow rounded-full h-1.5">
-          <Slider.Range className="absolute bg-gradient-to-r from-orange-500 to-amber-400 rounded-full h-full" />
+        <Slider.Track className="relative grow rounded-full h-1" style={{ background: 'var(--surface-2)' }}>
+          <Slider.Range className="absolute rounded-full h-full" style={{ background: 'var(--accent)' }} />
         </Slider.Track>
-        <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-orange-400 rounded-full shadow-lg hover:shadow-orange-400/30 focus:outline-none cursor-grab active:cursor-grabbing transition-shadow" />
+        <Slider.Thumb
+          className="block w-4 h-4 rounded-full shadow focus:outline-none cursor-grab active:cursor-grabbing"
+          style={{ background: 'var(--accent)', border: '2px solid var(--bg)' }}
+        />
       </Slider.Root>
 
-      <div className="flex justify-between mt-2">
+      <div className="flex justify-between mt-3">
         {[0.5, 1, 1.5, 2].map((v) => (
-          <span key={v} className={`text-[10px] font-medium ${value === v ? 'text-orange-500' : 'text-slate-300 dark:text-slate-600'}`}>
+          <span key={v} className="text-[10px] font-medium"
+            style={{ color: value === v ? 'var(--accent)' : 'var(--text-3)' }}>
             {v}×
           </span>
         ))}
