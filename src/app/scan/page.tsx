@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Upload, Loader2, X, Zap } from 'lucide-react';
+import { Camera, Upload, Loader2, X, Zap, RotateCcw } from 'lucide-react';
 import ScannerUpload from '@/components/scanner/ScannerUpload';
 import ScannerCamera from '@/components/scanner/ScannerCamera';
 import FreemiumBadge from '@/components/ui/FreemiumBadge';
@@ -14,12 +14,12 @@ import { ScanResult } from '@/lib/types';
 
 type Tab = 'upload' | 'camera';
 
-const loadingMessages = [
-  'Aiyah, uncle analyzing lah...',
-  'Spotting hidden ingredients...',
-  'Calculating macros...',
-  'Checking for coconut milk...',
-  'Hawker Uncle judging your choices...',
+const loadingSteps = [
+  'Identifying food items…',
+  'Detecting hidden ingredients…',
+  'Calculating nutrition…',
+  'Grading your meal…',
+  'Preparing results…',
 ];
 
 export default function ScanPage() {
@@ -27,110 +27,95 @@ export default function ScanPage() {
   const { canScan, incrementScan } = useFreemium();
   const { addScan } = useScans();
   const [tab, setTab] = useState<Tab>('upload');
-  const [preview, setPreview] = useState<string>('');
+  const [preview, setPreview] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState(0);
+  const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [showPremium, setShowPremium] = useState(false);
 
   const handleImage = useCallback((f: File, p: string) => {
-    setFile(f);
-    setPreview(p);
-    setError('');
+    setFile(f); setPreview(p); setError('');
   }, []);
 
-  const clearImage = () => {
-    setFile(null);
-    setPreview('');
-    setError('');
-  };
+  const clearImage = () => { setFile(null); setPreview(''); setError(''); };
 
   const analyze = async () => {
-    if (!file || !canScan) {
-      if (!canScan) setShowPremium(true);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    const msgInterval = setInterval(() => setLoadingMsg((m) => (m + 1) % loadingMessages.length), 2000);
-
+    if (!file) return;
+    if (!canScan) { setShowPremium(true); return; }
+    setLoading(true); setError('');
+    const iv = setInterval(() => setStep(s => (s + 1) % loadingSteps.length), 1800);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/analyze', { method: 'POST', body: fd });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Analysis failed');
-
-      const scan: ScanResult = {
-        id: generateId(),
-        timestamp: Date.now(),
-        imageDataUrl: preview,
-        portionMultiplier: 1,
-        ...data,
-      };
-
+      const scan: ScanResult = { id: generateId(), timestamp: Date.now(), imageDataUrl: preview, portionMultiplier: 1, ...data };
       addScan(scan, false);
       incrementScan();
       router.push(`/results/${scan.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
     } finally {
-      setLoading(false);
-      clearInterval(msgInterval);
+      setLoading(false); clearInterval(iv);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-lg mx-auto px-5 py-10">
+
+      {/* Header */}
+      <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Scan Your Meal</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Upload or capture a photo to analyze</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-1)' }}>
+            Scan your meal
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+            Upload a photo or use your camera
+          </p>
         </div>
         <FreemiumBadge />
       </div>
 
-      <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6">
-        {(['upload', 'camera'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); clearImage(); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all
-              ${tab === t
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-          >
-            {t === 'upload' ? <Upload size={14} /> : <Camera size={14} />}
+      {/* Tab switcher */}
+      <div className="flex gap-1 p-1 rounded-lg mb-6" style={{ background: 'var(--surface)' }}>
+        {(['upload', 'camera'] as Tab[]).map(t => (
+          <button key={t} onClick={() => { setTab(t); clearImage(); }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium transition-all"
+            style={{
+              background: tab === t ? 'var(--accent)' : 'transparent',
+              color: tab === t ? '#fff' : 'var(--text-2)',
+            }}>
+            {t === 'upload' ? <Upload size={13} /> : <Camera size={13} />}
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
 
+      {/* Scanner area */}
       <AnimatePresence mode="wait">
         {preview ? (
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            className="relative rounded-2xl overflow-hidden"
-          >
+          <motion.div key="preview"
+            initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            className="relative rounded-xl overflow-hidden"
+            style={{ background: 'var(--surface)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Food preview" className="w-full object-cover max-h-80 rounded-2xl" />
-            <button
-              onClick={clearImage}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-            >
-              <X size={14} />
-            </button>
-            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-medium">
-              Ready to analyze
-            </div>
+            <img src={preview} alt="Preview" className="w-full object-cover max-h-72" />
+            {loading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+                style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <Loader2 size={28} className="animate-spin text-white" />
+                <p className="text-sm font-medium text-white">{loadingSteps[step]}</p>
+              </div>
+            )}
+            {!loading && (
+              <button onClick={clearImage}
+                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white"
+                style={{ background: 'rgba(0,0,0,0.5)' }}>
+                <X size={13} />
+              </button>
+            )}
           </motion.div>
         ) : tab === 'upload' ? (
           <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -143,44 +128,41 @@ export default function ScanPage() {
         )}
       </AnimatePresence>
 
+      {/* Error */}
       {error && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-3 rounded-lg text-sm border"
+          style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>
           {error}
         </motion.div>
       )}
 
-      {preview && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
-          <button
-            onClick={analyze}
-            disabled={loading}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400
-              hover:from-orange-600 hover:to-amber-500 disabled:opacity-60 disabled:cursor-not-allowed
-              text-white font-semibold shadow-lg hover:shadow-orange-500/30 transition-all duration-200
-              flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                {loadingMessages[loadingMsg]}
-              </>
-            ) : (
-              <>
-                <Zap size={16} />
-                Analyze with AI
-              </>
-            )}
+      {/* Actions */}
+      {preview && !loading && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex gap-2">
+          <button onClick={clearImage}
+            className="w-10 h-12 rounded-lg flex items-center justify-center transition-colors border flex-shrink-0"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-2)', background: 'var(--surface)' }}>
+            <RotateCcw size={15} />
+          </button>
+          <button onClick={analyze}
+            className="flex-1 h-12 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+            style={{ background: 'var(--accent)' }}>
+            <Zap size={15} />
+            Analyse with AI
           </button>
         </motion.div>
       )}
 
-      <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Tips for best results</p>
-        <ul className="text-xs text-slate-400 dark:text-slate-500 space-y-1">
-          <li>• Take photo from directly above the plate</li>
-          <li>• Ensure good lighting — natural light is best</li>
-          <li>• Include the whole dish in the frame</li>
-          <li>• Avoid shadows covering the food</li>
+      {/* Tips */}
+      <div className="mt-8 p-4 rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--text-1)' }}>Tips for best results</p>
+        <ul className="space-y-1.5">
+          {['Shoot from directly above the plate', 'Good lighting — avoid harsh shadows', 'Include the whole dish in frame'].map(t => (
+            <li key={t} className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-2)' }}>
+              <span style={{ color: 'var(--accent)' }}>·</span> {t}
+            </li>
+          ))}
         </ul>
       </div>
 

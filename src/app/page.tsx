@@ -1,206 +1,174 @@
 'use client';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Camera, Brain, TrendingUp, Shield, Zap, ChevronRight, Star } from 'lucide-react';
+import { Camera, ChevronRight, Zap, Eye, TrendingUp, Sparkles } from 'lucide-react';
 
-const features = [
-  {
-    icon: Camera,
-    title: 'Computer Vision Scanning',
-    desc: 'Snap any plate — our AI identifies every individual food item, estimates portions visually, and lets you fine-tune the amount.',
-    color: 'from-orange-500 to-amber-400',
-  },
-  {
-    icon: Brain,
-    title: 'Hidden Ingredient X-Ray',
-    desc: 'Detects invisible fats in coconut milk broth, sugar in sambal, lard in char kway teow — the stuff western apps totally miss.',
-    color: 'from-violet-500 to-purple-400',
-  },
-  {
-    icon: Shield,
-    title: 'Nutri-Grade + Hawker Uncle',
-    desc: 'Get a Singapore-style A–E nutritional grade and hilarious Singlish commentary from your virtual Hawker Uncle AI.',
-    color: 'from-emerald-500 to-teal-400',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Macro Rings & Weekly Trends',
-    desc: 'Beautiful daily macro rings, per-meal scan cards, and 7-day calorie charts to keep your diet on track.',
-    color: 'from-blue-500 to-cyan-400',
-  },
+const recentScans = [
+  { name: 'Hainanese Chicken Rice', grade: 'B', cal: 520, time: '12:34 PM', emoji: '🍚' },
+  { name: 'Char Kway Teow', grade: 'D', cal: 780, time: '7:21 PM', emoji: '🍜' },
+  { name: 'Laksa', grade: 'C', cal: 645, time: 'Yesterday', emoji: '🥣' },
+  { name: 'Nasi Lemak', grade: 'C', cal: 690, time: 'Yesterday', emoji: '🍛' },
+  { name: 'Bak Chor Mee', grade: 'B', cal: 490, time: 'Mon', emoji: '🍝' },
+  { name: 'Wonton Soup', grade: 'A', cal: 310, time: 'Mon', emoji: '🍲' },
 ];
 
-const dishes = [
-  { name: 'Chicken Rice', grade: 'B', cal: 520 },
-  { name: 'Char Kway Teow', grade: 'D', cal: 780 },
-  { name: 'Laksa', grade: 'C', cal: 640 },
-  { name: 'Bak Chor Mee', grade: 'B', cal: 490 },
-];
-
-const gradeColors: Record<string, string> = {
-  A: 'bg-emerald-500',
-  B: 'bg-green-500',
-  C: 'bg-yellow-500',
-  D: 'bg-orange-500',
-  E: 'bg-red-500',
+const gradeConfig: Record<string, { bg: string; text: string }> = {
+  A: { bg: '#1db954', text: '#fff' },
+  B: { bg: '#22c55e', text: '#fff' },
+  C: { bg: '#f59e0b', text: '#fff' },
+  D: { bg: '#f97316', text: '#fff' },
+  E: { bg: '#ef4444', text: '#fff' },
 };
 
-export default function LandingPage() {
-  return (
-    <div className="relative overflow-hidden">
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-amber-500/08 rounded-full blur-3xl" />
-      </div>
+const features = [
+  { icon: Eye, title: 'Hidden ingredient X-ray', desc: 'Finds coconut milk fat, sambal sugar, and lard that western apps miss entirely.' },
+  { icon: Sparkles, title: 'AI portion estimation', desc: 'Computer vision estimates serving sizes. Slide to adjust if you ate more or less.' },
+  { icon: TrendingUp, title: 'Macro trends', desc: 'Daily rings and a 7-day chart show your nutrition patterns at a glance.' },
+];
 
-      <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 flex flex-col items-center text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
-            bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20
-            text-orange-600 dark:text-orange-400 text-xs font-medium mb-6">
-            <Star size={11} className="fill-current" />
-            Built for Singapore hawker culture
+export default function Home() {
+  return (
+    <div style={{ background: 'var(--bg)' }}>
+
+      {/* ── Hero ── */}
+      <section className="max-w-5xl mx-auto px-5 pt-20 pb-24">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-8 border"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-2)', background: 'var(--surface)' }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+            Powered by Gemini 2.5 Flash
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-5 leading-[1.1]">
-            AI that actually<br />
-            <span className="gradient-text">understands</span> your food
+          <h1 className="text-5xl sm:text-7xl font-bold tracking-tighter leading-[1.02] mb-6"
+            style={{ color: 'var(--text-1)' }}>
+            Know exactly<br />
+            what you&apos;re<br />
+            <span className="gradient-text">eating.</span>
           </h1>
 
-          <p className="text-lg text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
-            Snap a photo of your hawker meal. HawkerSense identifies every ingredient —
-            including the hidden ones — and gives you accurate calories, macros, and a
-            nutritional grade. No more guessing.
+          <p className="text-lg max-w-lg leading-relaxed mb-10" style={{ color: 'var(--text-2)' }}>
+            Snap a photo of any Asian meal. AI identifies every ingredient —
+            including the hidden ones — and breaks down your calories and macros instantly.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/scan"
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl
-                bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-600 hover:to-amber-500
-                text-white font-semibold text-sm shadow-lg hover:shadow-orange-500/30
-                transition-all duration-200 group"
-            >
-              <Camera size={16} />
-              Start Scanning Free
-              <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+          <div className="flex items-center gap-3">
+            <Link href="/scan"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ background: 'var(--accent)' }}>
+              <Camera size={15} />
+              Scan a meal
+              <ChevronRight size={14} />
             </Link>
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl
-                border border-slate-200 dark:border-slate-700
-                text-slate-700 dark:text-slate-300 font-medium text-sm
-                hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-            >
-              View Dashboard
+            <Link href="/dashboard"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors border"
+              style={{ color: 'var(--text-2)', borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              View dashboard
             </Link>
           </div>
 
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">3 free scans daily • No credit card required</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.6 }}
-          className="mt-14 w-full max-w-md"
-        >
-          <div className="rounded-2xl border border-slate-200 dark:border-white/[0.07]
-            bg-white dark:bg-slate-900 shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-              </div>
-              <span className="text-xs text-slate-400 dark:text-slate-500 ml-1">Recent Scans</span>
-            </div>
-            <div className="p-3 space-y-2">
-              {dishes.map((d, i) => (
-                <motion.div
-                  key={d.name}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-7 h-7 rounded-lg ${gradeColors[d.grade]} flex items-center justify-center text-white text-xs font-bold`}>
-                      {d.grade}
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.name}</span>
-                  </div>
-                  <span className="text-sm text-slate-400 dark:text-slate-500">{d.cal} kcal</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          <p className="mt-4 text-xs" style={{ color: 'var(--text-3)' }}>
+            3 free scans per day · No sign-up required
+          </p>
         </motion.div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 pb-20">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-            Built different — for Asian food
+      {/* ── Recent Scans ── */}
+      <section className="max-w-5xl mx-auto px-5 pb-24">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
+            Recent scans
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto text-sm">
-            Western nutrition apps fail on laksa, nasi lemak, and char siew. We don&apos;t.
-          </p>
+          <Link href="/dashboard" className="text-sm font-medium hover:underline" style={{ color: 'var(--text-2)' }}>
+            See all
+          </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group p-6 rounded-2xl border border-slate-200 dark:border-white/[0.07]
-                bg-white dark:bg-slate-900 hover:border-orange-200 dark:hover:border-orange-500/20
-                transition-colors duration-200"
-            >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4 shadow-lg`}>
-                <f.icon size={18} className="text-white" />
-              </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1.5 text-sm">{f.title}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{f.desc}</p>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {recentScans.map((scan, i) => {
+            const g = gradeConfig[scan.grade];
+            return (
+              <motion.div
+                key={scan.name}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="group p-4 rounded-xl cursor-pointer transition-colors"
+                style={{ background: 'var(--surface)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface)')}
+              >
+                <div className="text-3xl mb-3">{scan.emoji}</div>
+                <p className="text-sm font-semibold truncate mb-0.5" style={{ color: 'var(--text-1)' }}>
+                  {scan.name}
+                </p>
+                <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{scan.time}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
+                    {scan.cal} kcal
+                  </span>
+                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-sm"
+                    style={{ background: g.bg, color: g.text }}>
+                    {scan.grade}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 pb-24">
-        <div className="rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 p-px shadow-xl shadow-orange-500/20">
-          <div className="rounded-[calc(1rem-1px)] bg-white dark:bg-slate-900 p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-medium mb-3">
-                <Zap size={11} />
-                Premium
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
-                Unlimited scanning, zero limits
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">
-                Upgrade for $4.99/month or $39.99/year — cancel any time.
-              </p>
-            </div>
-            <Link
-              href="/scan"
-              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl
-                bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-600 hover:to-amber-500
-                text-white font-semibold text-sm shadow-lg transition-all whitespace-nowrap"
-            >
-              <Zap size={14} />
-              Get Premium
-            </Link>
+      {/* ── Features ── */}
+      <section className="border-t" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-5xl mx-auto px-5 py-24">
+          <h2 className="text-2xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-1)' }}>
+            Built for Asian food
+          </h2>
+          <p className="mb-12 text-sm" style={{ color: 'var(--text-2)' }}>
+            Western calorie apps guess. We analyse.
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-8">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4"
+                  style={{ background: 'var(--surface-2)' }}>
+                  <f.icon size={16} style={{ color: 'var(--accent)' }} />
+                </div>
+                <h3 className="font-semibold text-sm mb-2" style={{ color: 'var(--text-1)' }}>{f.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>{f.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* ── CTA ── */}
+      <section className="border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <div className="max-w-5xl mx-auto px-5 py-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-1)' }}>
+              Unlimited scans with Premium
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+              $4.99 / month · $39.99 / year · Cancel any time
+            </p>
+          </div>
+          <Link href="/scan"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white whitespace-nowrap transition-opacity hover:opacity-90"
+            style={{ background: 'var(--accent)' }}>
+            <Zap size={14} />
+            Upgrade to Premium
+          </Link>
+        </div>
+      </section>
+
     </div>
   );
 }

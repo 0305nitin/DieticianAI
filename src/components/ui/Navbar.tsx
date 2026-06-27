@@ -13,37 +13,39 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   return (
-    <nav className="sticky top-0 z-50 h-16 flex items-center
-      border-b border-slate-200 dark:border-white/[0.06]
-      bg-white/80 dark:bg-slate-950/80
-      backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto w-full px-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-            <Zap size={16} className="text-white" />
+    <nav className="sticky top-0 z-50 h-14 flex items-center border-b"
+      style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
+      <div className="max-w-5xl mx-auto w-full px-5 flex items-center justify-between">
+
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--accent)' }}>
+            <Zap size={14} className="text-white" />
           </div>
-          <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
-            Hawker<span className="gradient-text">Sense</span>
+          <span className="font-semibold text-sm tracking-tight" style={{ color: 'var(--text-1)' }}>
+            DieticianAI
           </span>
         </Link>
 
-        <div className="flex items-center gap-1">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150',
-                pathname === href || pathname.startsWith(href + '/')
-                  ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-              )}
-            >
-              <Icon size={15} />
-              <span className="hidden sm:inline">{label}</span>
-            </Link>
-          ))}
-          <div className="ml-1">
+        <div className="flex items-center gap-0.5">
+          {links.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + '/');
+            return (
+              <Link key={href} href={href}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  active
+                    ? 'text-white bg-[var(--accent)]'
+                    : 'hover:bg-[var(--surface-2)]'
+                )}
+                style={{ color: active ? '#fff' : 'var(--text-2)' }}
+              >
+                <Icon size={14} />
+                <span className="hidden sm:inline">{label}</span>
+              </Link>
+            );
+          })}
+          <div className="ml-2 pl-2 border-l" style={{ borderColor: 'var(--border)' }}>
             <ThemeToggle />
           </div>
         </div>
