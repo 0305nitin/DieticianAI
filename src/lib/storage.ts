@@ -1,4 +1,4 @@
-import { ScanResult, DailyLog } from './types';
+import { ScanResult, DailyLog, ModelChoice } from './types';
 
 const SCANS_KEY = 'hawkersense_scans';
 const DAILY_LOG_KEY = 'hawkersense_daily_log';
@@ -75,4 +75,86 @@ export function isPremium(): boolean {
 
 export function setPremium(value: boolean): void {
   localStorage.setItem(PREMIUM_KEY, String(value));
+}
+
+// -- Model credits --
+
+const MODEL_CREDITS_KEY = 'dieticianai_model_credits';
+
+interface ModelCreditStore {
+  date: string;
+  usage: Partial<Record<ModelChoice, number>>;
+}
+
+function getModelCreditStore(): ModelCreditStore {
+  if (typeof window === 'undefined') return { date: getTodayString(), usage: {} };
+  try {
+    const raw = localStorage.getItem(MODEL_CREDITS_KEY);
+    const store: ModelCreditStore = raw ? JSON.parse(raw) : { date: getTodayString(), usage: {} };
+    if (store.date !== getTodayString()) return { date: getTodayString(), usage: {} };
+    return store;
+  } catch {
+    return { date: getTodayString(), usage: {} };
+  }
+}
+
+export function getModelUsage(model: ModelChoice): number {
+  return getModelCreditStore().usage[model] ?? 0;
+}
+
+export function incrementModelUsage(model: ModelChoice): void {
+  const store = getModelCreditStore();
+  store.usage[model] = (store.usage[model] ?? 0) + 1;
+  localStorage.setItem(MODEL_CREDITS_KEY, JSON.stringify(store));
+}
+
+// -- Portion history --
+
+const PORTION_HISTORY_KEY = 'dieticianai_portion_history';
+
+type PortionHistory = Record<string, number[]>;
+
+const DISH_KEYWORDS: Record<string, string> = {
+  noodle: 'noodles', mee: 'noodles', pasta: 'noodles', kway: 'noodles',
+  spaghetti: 'noodles', ramen: 'noodles', udon: 'noodles', pho: 'noodles',
+  rice: 'rice', nasi: 'rice', biryani: 'rice', 'fried rice': 'rice',
+  soup: 'soup', laksa: 'soup', bak: 'soup', congee: 'soup', porridge: 'soup',
+  chicken: 'protein', fish: 'protein', pork: 'protein', beef: 'protein', tofu: 'protein',
+  salad: 'light', bread: 'light', sandwich: 'light',
+};
+
+function getDishCategory(dishName: string): string {
+  const lower = dishName.toLowerCase();
+  for (const [kw, cat] of Object.entries(DISH_KEYWORDS)) {
+    if (lower.includes(kw)) return cat;
+  }
+  return 'other';
+}
+
+function getPortionHistory(): PortionHistory {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(PORTION_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function getSuggestedMultiplier(dishName: string): number | null {
+  const history = getPortionHistory();
+  const cat = getDishCategory(dishName);
+  const values = history[cat];
+  if (!values || values.length < 2) return null;
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  return Math.round(avg * 4) / 4;
+}
+
+export function recordPortionMultiplier(dishName: string, multiplier: number): void {
+  const history = getPortionHistory();
+  const cat = getDishCategory(dishName);
+  const values = history[cat] ?? [];
+  values.push(multiplier);
+  history[cat] = values.slice(-10);
+  localStorage.setItem(PORTION_HISTORY_KEY, JSON.stringify(history));
 }
