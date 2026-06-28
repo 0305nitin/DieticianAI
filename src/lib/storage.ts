@@ -1,4 +1,5 @@
 import { ScanResult, DailyLog, ModelChoice } from './types';
+import { UserProfile } from './bmr';
 
 const SCANS_KEY = 'hawkersense_scans';
 const DAILY_LOG_KEY = 'hawkersense_daily_log';
@@ -77,7 +78,7 @@ export function setPremium(value: boolean): void {
   localStorage.setItem(PREMIUM_KEY, String(value));
 }
 
-// -- Model credits --
+// ── Model credits ────────────────────────────────────────────────────────────
 
 const MODEL_CREDITS_KEY = 'dieticianai_model_credits';
 
@@ -108,11 +109,11 @@ export function incrementModelUsage(model: ModelChoice): void {
   localStorage.setItem(MODEL_CREDITS_KEY, JSON.stringify(store));
 }
 
-// -- Portion history --
+// ── Portion history ──────────────────────────────────────────────────────────
 
 const PORTION_HISTORY_KEY = 'dieticianai_portion_history';
 
-type PortionHistory = Record<string, number[]>;
+type PortionHistory = Record<string, number[]>; // category → recent multipliers
 
 const DISH_KEYWORDS: Record<string, string> = {
   noodle: 'noodles', mee: 'noodles', pasta: 'noodles', kway: 'noodles',
@@ -147,6 +148,7 @@ export function getSuggestedMultiplier(dishName: string): number | null {
   const values = history[cat];
   if (!values || values.length < 2) return null;
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  // Round to nearest 0.25
   return Math.round(avg * 4) / 4;
 }
 
@@ -155,6 +157,24 @@ export function recordPortionMultiplier(dishName: string, multiplier: number): v
   const cat = getDishCategory(dishName);
   const values = history[cat] ?? [];
   values.push(multiplier);
-  history[cat] = values.slice(-10);
+  history[cat] = values.slice(-10); // keep last 10
   localStorage.setItem(PORTION_HISTORY_KEY, JSON.stringify(history));
+}
+
+// ── User Profile ─────────────────────────────────────────────────────────────
+
+const PROFILE_KEY = 'dieticianai_profile';
+
+export function getProfile(): UserProfile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveProfile(profile: UserProfile): void {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
