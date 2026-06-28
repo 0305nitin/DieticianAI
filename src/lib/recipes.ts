@@ -1,4 +1,5 @@
 import { NutriGrade } from './types';
+import { GoalType } from './bmr';
 
 export interface Recipe {
   id: string;
@@ -288,7 +289,7 @@ export const RECIPES: Recipe[] = [
       'Flip; brush with sauce; cook 3–4 more minutes.',
       'Sprinkle sesame seeds; serve with steamed veg.',
     ],
-    tip: "Aim for 2 servings of fatty fish per week — it's one of the best sources of anti-inflammatory omega-3.",
+    tip: 'Aim for 2 servings of fatty fish per week — it\'s one of the best sources of anti-inflammatory omega-3.',
   },
   {
     id: 'tofu-stir-fry',
@@ -341,7 +342,7 @@ export const RECIPES: Recipe[] = [
       'Crack egg on top; let set while simmering.',
       'Serve in the pot.',
     ],
-    tip: "The egg boosts protein significantly — don't skip it.",
+    tip: 'The egg boosts protein significantly — don\'t skip it.',
   },
   {
     id: 'chawanmushi',
@@ -440,7 +441,7 @@ export const RECIPES: Recipe[] = [
       'Slice chicken thinly when cooled.',
       'Serve with cucumber and dipping sauces on side.',
     ],
-    tip: "Breast over thigh saves ~80 kcal. Ask for extra cucumber — it's virtually zero calories.",
+    tip: 'Breast over thigh saves ~80 kcal. Ask for extra cucumber — it\'s virtually zero calories.',
   },
   {
     id: 'cold-soba',
@@ -461,7 +462,7 @@ export const RECIPES: Recipe[] = [
       'Rinse immediately under cold water; drain.',
       'Arrange on bamboo tray or plate.',
       'Prepare dipping sauce with wasabi and spring onion.',
-      "Dip noodles — don't pour sauce over.",
+      'Dip noodles — don\'t pour sauce over.',
     ],
     tip: '100% buckwheat soba has a lower GI than wheat noodles. Check labels — many brands mix wheat in.',
   },
@@ -516,3 +517,18 @@ export const RECIPES: Recipe[] = [
     tip: 'Chia seeds expand 10× their volume, making this surprisingly filling despite low calories.',
   },
 ];
+
+const GRADE_SCORE: Record<NutriGrade, number> = { A: 3, B: 2, C: 1, D: 0, E: 0 };
+
+export function suggestRecipes(remainingCalories: number, goal?: GoalType): Recipe[] {
+  if (remainingCalories < 50) return [];
+  const candidates = RECIPES.filter(r => r.calories <= remainingCalories);
+  const scored = candidates.map(r => {
+    let score = GRADE_SCORE[r.grade];
+    if (goal === 'lose') score += r.protein >= 20 ? 2 : 0;
+    if (goal === 'gain') score += r.calories >= 350 ? 1 : 0;
+    if (r.fat > 20) score -= 1;
+    return { recipe: r, score };
+  });
+  return scored.sort((a, b) => b.score - a.score).slice(0, 3).map(s => s.recipe);
+}
