@@ -1,13 +1,15 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Camera, LayoutDashboard, Zap, MapPin, ChefHat, User } from 'lucide-react';
+import { Camera, LayoutDashboard, Zap, MapPin, ChefHat, User, History, TrendingUp } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { cn } from '@/lib/utils';
 
 const links = [
   { href: '/scan',      label: 'Scan',      icon: Camera         },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/history',   label: 'History',   icon: History         },
+  { href: '/insights',  label: 'Insights',  icon: TrendingUp      },
   { href: '/nearby',    label: 'Nearby',    icon: MapPin          },
   { href: '/recipes',   label: 'Recipes',   icon: ChefHat         },
   { href: '/profile',   label: 'Profile',   icon: User            },

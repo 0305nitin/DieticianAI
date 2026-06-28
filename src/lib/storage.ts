@@ -78,7 +78,7 @@ export function setPremium(value: boolean): void {
   localStorage.setItem(PREMIUM_KEY, String(value));
 }
 
-// ── Model credits ────────────────────────────────────────────────────────────
+// ── Model credits ────────────────────────────────────────────
 
 const MODEL_CREDITS_KEY = 'dieticianai_model_credits';
 
@@ -109,7 +109,7 @@ export function incrementModelUsage(model: ModelChoice): void {
   localStorage.setItem(MODEL_CREDITS_KEY, JSON.stringify(store));
 }
 
-// ── Portion history ──────────────────────────────────────────────────────────
+// ── Portion history ──────────────────────────────────────────
 
 const PORTION_HISTORY_KEY = 'dieticianai_portion_history';
 
@@ -161,7 +161,7 @@ export function recordPortionMultiplier(dishName: string, multiplier: number): v
   localStorage.setItem(PORTION_HISTORY_KEY, JSON.stringify(history));
 }
 
-// ── User Profile ─────────────────────────────────────────────────────────────
+// ── User Profile ─────────────────────────────────────────────
 
 const PROFILE_KEY = 'dieticianai_profile';
 
@@ -177,4 +177,45 @@ export function getProfile(): UserProfile | null {
 
 export function saveProfile(profile: UserProfile): void {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+// ── Scan deletion ──────────────────────────────────────────────
+
+export function deleteScan(id: string): void {
+  const scans = getAllScans().filter(s => s.id !== id);
+  localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+}
+
+// ── Extended logs ─────────────────────────────────────────────
+
+export function getMonthlyLogs(): DailyLog[] {
+  const logs: DailyLog[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    logs.push(getDailyLog(d.toISOString().split('T')[0]));
+  }
+  return logs;
+}
+
+// ── Weight log ────────────────────────────────────────────────
+
+const WEIGHT_LOG_KEY = 'dieticianai_weight_log';
+
+export interface WeightEntry { date: string; kg: number; }
+
+export function getWeightLog(): WeightEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(WEIGHT_LOG_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function saveWeightEntry(entry: WeightEntry): void {
+  const log = getWeightLog();
+  const idx = log.findIndex(e => e.date === entry.date);
+  if (idx !== -1) { log[idx] = entry; } else { log.push(entry); }
+  log.sort((a, b) => a.date.localeCompare(b.date));
+  localStorage.setItem(WEIGHT_LOG_KEY, JSON.stringify(log.slice(-90)));
 }
