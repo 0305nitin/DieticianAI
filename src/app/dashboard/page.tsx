@@ -1,8 +1,11 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Camera } from 'lucide-react';
+import { Camera, User } from 'lucide-react';
 import { useDailyMacros } from '@/hooks/useDailyMacros';
+import { useProfile } from '@/hooks/useProfile';
+import { calculateCalorieGoal, getMacroTargets } from '@/lib/bmr';
+import { DAILY_TARGETS, DailyMacros } from '@/lib/types';
 import MacroRings from '@/components/tracking/MacroRings';
 import MealCard from '@/components/tracking/MealCard';
 import WeeklyChart from '@/components/tracking/WeeklyChart';
@@ -18,36 +21,59 @@ function getGreeting() {
 
 export default function DashboardPage() {
   const { macros, todayScans, weeklyCalories } = useDailyMacros();
+  const { profile } = useProfile();
+
+  const targets: DailyMacros = profile
+    ? getMacroTargets(calculateCalorieGoal(profile), profile.goal)
+    : DAILY_TARGETS;
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-10">
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-10">
+      <div className="flex items-start justify-between mb-8">
         <div>
           <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-3)' }}>
             {new Date().toLocaleDateString('en-SG', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
           <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
-            {getGreeting()}
+            {getGreeting()}{profile?.name ? `, ${profile.name}` : ''}
           </h1>
         </div>
         <FreemiumBadge />
       </div>
 
+      {/* Profile prompt if no profile set */}
+      {!profile && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 rounded-xl border flex items-center gap-3"
+          style={{ background: 'rgba(255,107,53,0.06)', borderColor: 'rgba(255,107,53,0.2)' }}>
+          <User size={18} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Set up your profile</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Add height, weight & goal to get personalised calorie targets</p>
+          </div>
+          <Link href="/profile"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white shrink-0"
+            style={{ background: 'var(--accent)' }}>
+            Set up
+          </Link>
+        </motion.div>
+      )}
+
       {/* Top row: summary + macro rings */}
       <div className="grid sm:grid-cols-2 gap-4 mb-4">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <DailySummary macros={macros} mealCount={todayScans.length} />
+          <DailySummary macros={macros} mealCount={todayScans.length} targets={targets} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
-          <MacroRings macros={macros} />
+          <MacroRings macros={macros} targets={targets} />
         </motion.div>
       </div>
 
       {/* Weekly chart */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
-        <WeeklyChart data={weeklyCalories} />
+        <WeeklyChart data={weeklyCalories} calorieTarget={targets.calories} />
       </motion.div>
 
       {/* Today's meals */}

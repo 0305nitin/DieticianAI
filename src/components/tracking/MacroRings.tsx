@@ -1,12 +1,15 @@
 'use client';
 import { DailyMacros, DAILY_TARGETS } from '@/lib/types';
 
-interface Props { macros: DailyMacros; }
+interface Props {
+  macros: DailyMacros;
+  targets?: DailyMacros;
+}
 
 const items = [
   { key: 'protein' as const, label: 'Protein', unit: 'g', color: '#3b82f6' },
   { key: 'carbs'   as const, label: 'Carbs',   unit: 'g', color: '#f59e0b' },
-  { key: 'fat'     as const, label: 'Fat',     unit: 'g', color: '#f43f5e' },
+  { key: 'fat'     as const, label: 'Fat',      unit: 'g', color: '#f43f5e' },
 ];
 
 function Ring({ value, target, color }: { value: number; target: number; color: string }) {
@@ -26,14 +29,15 @@ function Ring({ value, target, color }: { value: number; target: number; color: 
   );
 }
 
-export default function MacroRings({ macros }: Props) {
+export default function MacroRings({ macros, targets }: Props) {
+  const t = targets ?? DAILY_TARGETS;
   return (
     <div className="h-full p-5 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
       <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-3)' }}>MACROS</p>
       <div className="flex items-center justify-around">
         {items.map(({ key, label, unit, color }) => {
           const val = Math.round(macros[key]);
-          const target = DAILY_TARGETS[key];
+          const target = t[key];
           return (
             <div key={key} className="flex flex-col items-center gap-2">
               <div className="relative">
@@ -47,6 +51,7 @@ export default function MacroRings({ macros }: Props) {
               <div className="text-center">
                 <p className="text-xs font-semibold leading-none mb-0.5" style={{ color: 'var(--text-1)' }}>{val}{unit}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{label}</p>
+                <p className="text-[9px]" style={{ color: 'var(--text-3)' }}>/ {target}{unit}</p>
               </div>
             </div>
           );

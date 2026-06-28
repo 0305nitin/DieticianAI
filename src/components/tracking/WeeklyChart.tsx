@@ -3,9 +3,15 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, Refere
 import { formatDateShort } from '@/lib/utils';
 import { DAILY_TARGETS } from '@/lib/types';
 
-export default function WeeklyChart({ data }: { data: { date: string; calories: number }[] }) {
+interface Props {
+  data: { date: string; calories: number }[];
+  calorieTarget?: number;
+}
+
+export default function WeeklyChart({ data, calorieTarget }: Props) {
+  const target = calorieTarget ?? DAILY_TARGETS.calories;
   const today = new Date().toISOString().split('T')[0];
-  const max = Math.max(...data.map(d => d.calories), DAILY_TARGETS.calories);
+  const max = Math.max(...data.map(d => d.calories), target);
 
   return (
     <div className="p-5 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
@@ -13,7 +19,7 @@ export default function WeeklyChart({ data }: { data: { date: string; calories: 
         <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>WEEKLY CALORIES</p>
         <div className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-3)' }}>
           <div className="w-4 h-px border-t border-dashed" style={{ borderColor: 'var(--text-3)' }} />
-          {DAILY_TARGETS.calories.toLocaleString()} target
+          {target.toLocaleString()} target
         </div>
       </div>
       <div className="h-36">
@@ -22,7 +28,7 @@ export default function WeeklyChart({ data }: { data: { date: string; calories: 
             <XAxis dataKey="date" tickFormatter={formatDateShort}
               tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
             <YAxis hide domain={[0, max * 1.1]} />
-            <ReferenceLine y={DAILY_TARGETS.calories} stroke="var(--text-3)" strokeDasharray="4 3" strokeWidth={1} />
+            <ReferenceLine y={target} stroke="var(--text-3)" strokeDasharray="4 3" strokeWidth={1} />
             <Tooltip
               formatter={(v) => [typeof v === 'number' ? `${v.toLocaleString()} kcal` : v, 'Calories']}
               labelFormatter={l => formatDateShort(String(l))}
@@ -32,7 +38,7 @@ export default function WeeklyChart({ data }: { data: { date: string; calories: 
             <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
               {data.map(d => (
                 <Cell key={d.date}
-                  fill={d.date === today ? 'var(--accent)' : d.calories >= DAILY_TARGETS.calories ? '#ef4444' : 'var(--surface-2)'}
+                  fill={d.date === today ? 'var(--accent)' : d.calories >= target ? '#ef4444' : 'var(--surface-2)'}
                 />
               ))}
             </Bar>

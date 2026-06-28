@@ -2,16 +2,31 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookmarkPlus, Check, AlertTriangle } from 'lucide-react';
-import { getScanById, addScanToDaily, updateScan } from '@/lib/storage';
+import { ArrowLeft, BookmarkPlus, Check, AlertTriangle, ExternalLink } from 'lucide-react';
+import { getScanById, addScanToDaily, updateScan, getSuggestedMultiplier, recordPortionMultiplier } from '@/lib/storage';
 import { scaledNutrition } from '@/lib/nutrition';
-import { ScanResult } from '@/lib/types';
+import { MODEL_LABELS, ScanResult } from '@/lib/types';
 import NutriGrade from '@/components/analysis/NutriGrade';
 import HawkerUncle from '@/components/analysis/HawkerUncle';
 import FoodItemCard from '@/components/analysis/FoodItemCard';
 import PortionAdjuster from '@/components/analysis/PortionAdjuster';
 import MacroDonut from '@/components/analysis/MacroDonut';
 import ComponentBreakdown from '@/components/analysis/ComponentBreakdown';
+
+function getCalorieExplanation(scan: ScanResult): string {
+  const { calories, protein, carbs, fat } = scan.totalNutrition;
+  const sorted = [
+    { name: 'carbohydrates', cals: carbs * 4 },
+    { name: 'fat',           cals: fat  * 9 },
+    { name: 'protein',       cals: protein * 4 },
+  ].sort((a, b) => b.cals - a.cals);
+  const top = sorted[0];
+  const pct = Math.round((top.cals / calories) * 100);
+  const note = carbs > 60 ? 'The rice or noodle base is the primary calorie source.'
+    : fat > 25 ? 'Cooking oils and fatty ingredients contribute significantly.'
+    : 'Lean protein drives the calorie count — a solid choice.';
+  return `${scan.dishName} gets ${pct}% of its ${calories} kcal from ${top.name}. ${note}`;
+}
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +40,8 @@ export default function ResultsPage() {
     const s = getScanById(id);
     if (!s) { setNotFound(true); return; }
     setScan(s);
-    setMultiplier(s.portionMultiplier);
+    const suggested = getSuggestedMultiplier(s.dishName);
+    setMultiplier(suggested ?? s.portionMultiplier);
   }, [id]);
 
   if (notFound) {
@@ -56,8 +72,28 @@ export default function ResultsPage() {
   const handleAddToLog = () => {
     addScanToDaily(scan.id);
     updateScan(id, { portionMultiplier: multiplier });
+    recordPortionMultiplier(scan.dishName, multiplier);
     setLogged(true);
   };
+
+  const query = encodeURIComponent(scan.dishName);
+  const sources = [
+    {
+      label: 'USDA FoodData Central',
+      url: `https://fdc.nal.usda.gov/fdc-app.html#/?query=${query}`,
+      flag: '🇺🇸',
+    },
+    {
+      label: 'Healthline Nutrition',
+      url: `https://www.healthline.com/search?q1=${query}`,
+      flag: '💊',
+    },
+    {
+      label: 'SG Health Hub',
+      url: `https://www.healthhub.sg/programmes/food-nutrition/search?q=${query}`,
+      flag: '🇸🇬',
+    },
+  ];
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 pb-28 space-y-3">
@@ -74,9 +110,17 @@ export default function ResultsPage() {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-bold truncate" style={{ color: 'var(--text-1)' }}>{scan.dishName}</h1>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-            {new Date(scan.timestamp).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              {new Date(scan.timestamp).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </p>
+            {scan.modelUsed && scan.modelUsed !== 'gemini-2.5-flash' && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--accent)' }}>
+                {MODEL_LABELS[scan.modelUsed]}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -128,8 +172,8 @@ export default function ResultsPage() {
         <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-3)' }}>NUTRITION DETAILS</p>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Fiber', value: scaled.fiber, color: '#1db954' },
-            { label: 'Sugar', value: scaled.sugar, color: '#f59e0b' },
+            { label: 'Fiber',    value: scaled.fiber,        color: '#1db954' },
+            { label: 'Sugar',    value: scaled.sugar,        color: '#f59e0b' },
             { label: 'Sat. Fat', value: scaled.saturatedFat, color: '#ef4444' },
           ].map((m) => (
             <div key={m.label} className="rounded-lg p-3 text-center"
@@ -155,6 +199,43 @@ export default function ResultsPage() {
           ))}
         </div>
       </div>
+
+      {/* Nutrition sources & calorie explanation */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="p-5 rounded-xl border"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      >
+        <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-3)' }}>LEARN MORE</p>
+
+        {/* Calorie explanation */}
+        <div className="p-3 rounded-lg mb-3" style={{ background: 'var(--surface-2)', borderLeft: '3px solid var(--accent)' }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-1)' }}>
+            💡 Why {scan.totalNutrition.calories} kcal?
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-2)' }}>
+            {getCalorieExplanation(scan)}
+          </p>
+        </div>
+
+        {/* External links */}
+        <p className="text-[10px] font-semibold mb-2" style={{ color: 'var(--text-3)' }}>NUTRITION DATABASES</p>
+        <div className="space-y-1.5">
+          {sources.map(src => (
+            <a key={src.label} href={src.url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs transition-colors group"
+              style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface-2)')}>
+              <span className="text-base">{src.flag}</span>
+              <span className="flex-1 font-medium">{src.label}</span>
+              <ExternalLink size={11} style={{ color: 'var(--text-3)' }} />
+            </a>
+          ))}
+        </div>
+      </motion.div>
 
       {/* Sticky add to log */}
       <div className="fixed bottom-0 inset-x-0 px-4 pb-6 pt-3"

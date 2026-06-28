@@ -1,15 +1,25 @@
 'use client';
 import { DailyMacros, DAILY_TARGETS } from '@/lib/types';
 
-interface Props { macros: DailyMacros; mealCount: number; }
+interface Props {
+  macros: DailyMacros;
+  mealCount: number;
+  targets?: DailyMacros;
+}
 
-export default function DailySummary({ macros, mealCount }: Props) {
-  const pct = Math.min(100, Math.round((macros.calories / DAILY_TARGETS.calories) * 100));
-  const remaining = DAILY_TARGETS.calories - macros.calories;
+export default function DailySummary({ macros, mealCount, targets }: Props) {
+  const t = targets ?? DAILY_TARGETS;
+  const pct = Math.min(100, Math.round((macros.calories / t.calories) * 100));
+  const remaining = t.calories - macros.calories;
 
   const status = pct === 0 ? 'empty' : pct <= 80 ? 'under' : pct <= 110 ? 'good' : 'over';
   const statusColor = { empty: 'var(--text-3)', under: '#3b82f6', good: '#1db954', over: '#ef4444' }[status];
-  const statusLabel = { empty: 'No meals yet', under: `${remaining} kcal remaining`, good: 'On target', over: `${Math.abs(remaining)} kcal over` }[status];
+  const statusLabel = {
+    empty: 'No meals yet',
+    under: `${remaining} kcal remaining`,
+    good: 'On target',
+    over: `${Math.abs(remaining)} kcal over`,
+  }[status];
 
   return (
     <div className="h-full p-5 rounded-xl flex flex-col justify-between border"
@@ -21,10 +31,13 @@ export default function DailySummary({ macros, mealCount }: Props) {
             {macros.calories.toLocaleString()}
           </span>
           <span className="text-sm pb-0.5" style={{ color: 'var(--text-3)' }}>
-            / {DAILY_TARGETS.calories.toLocaleString()}
+            / {t.calories.toLocaleString()}
           </span>
         </div>
         <p className="text-xs font-medium" style={{ color: statusColor }}>{statusLabel}</p>
+        {targets && (
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>Based on your profile goal</p>
+        )}
       </div>
 
       <div className="mt-6">
