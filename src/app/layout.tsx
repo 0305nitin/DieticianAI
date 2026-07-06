@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
-import Navbar from '@/components/ui/Navbar';
+import Sidebar from '@/components/ui/Sidebar';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const serif = Source_Serif_4({ subsets: ['latin'], weight: ['400', '600'], variable: '--font-serif' });
 
 export const metadata: Metadata = {
   title: 'DieticianAI — AI Nutrition Scanner for Asian Food',
@@ -14,11 +15,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${serif.variable}`}>
       <body className={inter.className}>
         <ThemeProvider>
-          <Navbar />
-          <main className="min-h-[calc(100dvh-4rem)]">{children}</main>
+          <Sidebar />
+          <main className="md:pl-60 min-h-dvh">{children}</main>
         </ThemeProvider>
       </body>
     </html>
