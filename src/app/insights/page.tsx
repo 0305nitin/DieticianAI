@@ -4,15 +4,11 @@ import { motion } from 'framer-motion';
 import { Flame, Award } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { getAllScans, getMonthlyLogs, getDailyLog } from '@/lib/storage';
-import { scaledNutrition, sumNutrition } from '@/lib/nutrition';
+import { scaledNutrition, sumNutrition, GRADE_COLORS } from '@/lib/nutrition';
 import { NutriGrade, ScanResult, DAILY_TARGETS } from '@/lib/types';
 import { useProfile } from '@/hooks/useProfile';
 import { calculateCalorieGoal, getMacroTargets } from '@/lib/bmr';
 import { formatDateShort } from '@/lib/utils';
-
-const gradeColors: Record<string, string> = {
-  A: '#10b981', B: '#22c55e', C: '#eab308', D: '#f97316', E: '#ef4444',
-};
 
 function computeStreak(): number {
   let streak = 0;
@@ -29,7 +25,7 @@ function computeStreak(): number {
 export default function InsightsPage() {
   const { profile } = useProfile();
   const [calData, setCalData] = useState<{ date: string; calories: number }[]>([]);
-  const [gradeDist, setGradeDist] = useState<{ grade: string; count: number }[]>([]);
+  const [gradeDist, setGradeDist] = useState<{ grade: NutriGrade; count: number }[]>([]);
   const [topDishes, setTopDishes] = useState<{ name: string; count: number; grade: NutriGrade }[]>([]);
   const [streak, setStreak] = useState(0);
   const [gradeAMeals, setGradeAMeals] = useState(0);
@@ -240,7 +236,7 @@ export default function InsightsPage() {
                     />
                     <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                       {gradeDist.map(d => (
-                        <Cell key={d.grade} fill={gradeColors[d.grade]} />
+                        <Cell key={d.grade} fill={GRADE_COLORS[d.grade]} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -263,7 +259,7 @@ export default function InsightsPage() {
                     <p className="text-sm font-medium flex-1 truncate"
                       style={{ color: 'var(--text-1)' }}>{d.name}</p>
                     <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black text-white shrink-0"
-                      style={{ background: gradeColors[d.grade] }}>{d.grade}</div>
+                      style={{ background: GRADE_COLORS[d.grade] }}>{d.grade}</div>
                     <p className="text-xs shrink-0 text-right w-14"
                       style={{ color: 'var(--text-3)' }}>
                       {d.count}× scan{d.count !== 1 ? 's' : ''}

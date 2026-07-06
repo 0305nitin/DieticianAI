@@ -6,12 +6,9 @@ import { ArrowLeft, Search, Trash2, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useScans } from '@/hooks/useScans';
 import { deleteScan } from '@/lib/storage';
-import { scaledNutrition } from '@/lib/nutrition';
+import { scaledNutrition, GRADE_COLORS } from '@/lib/nutrition';
 import { NutriGrade, ScanResult } from '@/lib/types';
 
-const gradeColor: Record<string, string> = {
-  A: '#10b981', B: '#22c55e', C: '#eab308', D: '#f97316', E: '#ef4444',
-};
 const GRADES: NutriGrade[] = ['A', 'B', 'C', 'D', 'E'];
 type DateFilter = 'all' | 'today' | 'week';
 
@@ -110,7 +107,7 @@ export default function HistoryPage() {
             <button key={g} onClick={() => setGradeFilter(g)}
               className="px-3 py-1 rounded-full text-xs font-bold transition-all"
               style={{
-                background: gradeFilter === g ? gradeColor[g] : 'var(--surface-2)',
+                background: gradeFilter === g ? GRADE_COLORS[g] : 'var(--surface-2)',
                 color: gradeFilter === g ? '#fff' : 'var(--text-2)',
               }}>Grade {g}</button>
           ))}
@@ -176,7 +173,7 @@ export default function HistoryPage() {
                           <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>kcal</p>
                         </div>
                         <div className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-black text-white shrink-0"
-                          style={{ background: gradeColor[scan.nutriGrade] }}>{scan.nutriGrade}</div>
+                          style={{ background: GRADE_COLORS[scan.nutriGrade] }}>{scan.nutriGrade}</div>
                       </Link>
 
                       {/* Delete row */}

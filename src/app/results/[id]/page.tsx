@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookmarkPlus, Check, AlertTriangle, ExternalLink } from 'lucide-react';
 import { getScanById, addScanToDaily, updateScan, getSuggestedMultiplier, recordPortionMultiplier } from '@/lib/storage';
-import { scaledNutrition } from '@/lib/nutrition';
+import { scaledNutrition, SUCCESS_GREEN } from '@/lib/nutrition';
 import { MODEL_LABELS, ScanResult } from '@/lib/types';
 import NutriGrade from '@/components/analysis/NutriGrade';
 import HawkerUncle from '@/components/analysis/HawkerUncle';
@@ -172,7 +172,7 @@ export default function ResultsPage() {
         <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-3)' }}>NUTRITION DETAILS</p>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Fiber',    value: scaled.fiber,        color: '#1db954' },
+            { label: 'Fiber',    value: scaled.fiber,        color: SUCCESS_GREEN },
             { label: 'Sugar',    value: scaled.sugar,        color: '#f59e0b' },
             { label: 'Sat. Fat', value: scaled.saturatedFat, color: '#ef4444' },
           ].map((m) => (
@@ -247,7 +247,7 @@ export default function ResultsPage() {
             disabled={logged}
             className="w-full py-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
             style={logged
-              ? { background: '#1db954', color: '#fff' }
+              ? { background: SUCCESS_GREEN, color: '#fff' }
               : { background: 'var(--accent)', color: '#fff' }
             }
           >

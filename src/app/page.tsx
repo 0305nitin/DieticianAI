@@ -2,8 +2,20 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Camera, ChevronRight, Zap, Eye, TrendingUp, Sparkles } from 'lucide-react';
+import { useScans } from '@/hooks/useScans';
+import { scaledNutrition, GRADE_COLORS } from '@/lib/nutrition';
 
-const recentScans = [
+type DisplayScan = {
+  id?: string;
+  name: string;
+  grade: string;
+  cal: number;
+  time: string;
+  emoji?: string;
+  image?: string;
+};
+
+const SAMPLE_SCANS: DisplayScan[] = [
   { name: 'Hainanese Chicken Rice', grade: 'B', cal: 520, time: '12:34 PM', emoji: '🍚' },
   { name: 'Char Kway Teow', grade: 'D', cal: 780, time: '7:21 PM', emoji: '🍜' },
   { name: 'Laksa', grade: 'C', cal: 645, time: 'Yesterday', emoji: '🥣' },
@@ -12,13 +24,15 @@ const recentScans = [
   { name: 'Wonton Soup', grade: 'A', cal: 310, time: 'Mon', emoji: '🍲' },
 ];
 
-const gradeConfig: Record<string, { bg: string; text: string }> = {
-  A: { bg: '#1db954', text: '#fff' },
-  B: { bg: '#22c55e', text: '#fff' },
-  C: { bg: '#f59e0b', text: '#fff' },
-  D: { bg: '#f97316', text: '#fff' },
-  E: { bg: '#ef4444', text: '#fff' },
-};
+function relativeTime(ts: number): string {
+  const now = new Date();
+  const d = new Date(ts);
+  const sameDay = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if (sameDay) return d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-SG', { weekday: 'short' });
+}
 
 const features = [
   { icon: Eye, title: 'Hidden ingredient X-ray', desc: 'Finds coconut milk fat, sambal sugar, and lard that western apps miss entirely.' },
@@ -27,6 +41,17 @@ const features = [
 ];
 
 export default function Home() {
+  const { scans } = useScans();
+  const realScans: DisplayScan[] = scans.slice(0, 6).map((s) => ({
+    id: s.id,
+    name: s.dishName,
+    grade: s.nutriGrade,
+    cal: scaledNutrition(s.totalNutrition, s.portionMultiplier).calories,
+    time: relativeTime(s.timestamp),
+    image: s.imageDataUrl,
+  }));
+  const displayScans = realScans.length > 0 ? realScans : SAMPLE_SCANS;
+
   return (
     <div style={{ background: 'var(--bg)' }}>
 
@@ -85,20 +110,25 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {recentScans.map((scan, i) => {
-            const g = gradeConfig[scan.grade];
-            return (
+          {displayScans.map((scan, i) => {
+            const card = (
               <motion.div
-                key={scan.name}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="group p-4 rounded-xl cursor-pointer transition-colors"
+                className="group h-full p-4 rounded-xl cursor-pointer transition-colors"
                 style={{ background: 'var(--surface)' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface)')}
               >
-                <div className="text-3xl mb-3">{scan.emoji}</div>
+                {scan.image ? (
+                  <div className="w-12 h-12 rounded-lg overflow-hidden mb-3" style={{ background: 'var(--surface-2)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={scan.image} alt={scan.name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="text-3xl mb-3">{scan.emoji}</div>
+                )}
                 <p className="text-sm font-semibold truncate mb-0.5" style={{ color: 'var(--text-1)' }}>
                   {scan.name}
                 </p>
@@ -107,13 +137,16 @@ export default function Home() {
                   <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
                     {scan.cal} kcal
                   </span>
-                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-sm"
-                    style={{ background: g.bg, color: g.text }}>
+                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-sm text-white"
+                    style={{ background: GRADE_COLORS[scan.grade as keyof typeof GRADE_COLORS] }}>
                     {scan.grade}
                   </span>
                 </div>
               </motion.div>
             );
+            return scan.id
+              ? <Link key={scan.id} href={`/results/${scan.id}`}>{card}</Link>
+              : <div key={`${scan.name}-${i}`}>{card}</div>;
           })}
         </div>
       </section>

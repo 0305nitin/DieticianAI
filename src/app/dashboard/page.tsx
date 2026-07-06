@@ -7,15 +7,12 @@ import { useProfile } from '@/hooks/useProfile';
 import { calculateCalorieGoal, getMacroTargets } from '@/lib/bmr';
 import { DAILY_TARGETS, DailyMacros } from '@/lib/types';
 import { suggestRecipes } from '@/lib/recipes';
+import { GRADE_COLORS } from '@/lib/nutrition';
 import MacroRings from '@/components/tracking/MacroRings';
 import MealCard from '@/components/tracking/MealCard';
 import WeeklyChart from '@/components/tracking/WeeklyChart';
 import DailySummary from '@/components/tracking/DailySummary';
 import FreemiumBadge from '@/components/ui/FreemiumBadge';
-
-const gradeColor: Record<string, string> = {
-  A: '#10b981', B: '#22c55e', C: '#eab308', D: '#f97316', E: '#ef4444',
-};
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -113,7 +110,7 @@ export default function DashboardPage() {
                   <p className="text-xs" style={{ color: 'var(--text-3)' }}>{r.calories} kcal · {r.cuisine}</p>
                 </div>
                 <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black text-white shrink-0"
-                  style={{ background: gradeColor[r.grade] }}>{r.grade}</div>
+                  style={{ background: GRADE_COLORS[r.grade] }}>{r.grade}</div>
               </Link>
             ))}
           </div>

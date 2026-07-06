@@ -12,6 +12,7 @@ import {
 import { getProfile, saveProfile } from '@/lib/storage';
 import { useWeightLog } from '@/hooks/useWeightLog';
 import { formatDateShort } from '@/lib/utils';
+import { SUCCESS_GREEN } from '@/lib/nutrition';
 
 const DEFAULT: UserProfile = {
   age: 25, gender: 'male', heightCm: 170, weightKg: 70,
@@ -281,7 +282,7 @@ export default function ProfilePage() {
           initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
           onClick={handleSave}
           className="w-full py-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
-          style={saved ? { background: '#1db954', color: '#fff' } : { background: 'var(--accent)', color: '#fff' }}>
+          style={saved ? { background: SUCCESS_GREEN, color: '#fff' } : { background: 'var(--accent)', color: '#fff' }}>
           {saved
             ? <><Check size={15} /> Saved — going to dashboard</>
             : <>Save Profile <ChevronRight size={15} /></>
