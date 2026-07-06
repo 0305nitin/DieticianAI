@@ -1,23 +1,51 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, EyeOff, AlertTriangle } from 'lucide-react';
+import { ChevronDown, EyeOff, AlertTriangle, Ban } from 'lucide-react';
 import { FoodItem } from '@/lib/types';
+import { getProfile } from '@/lib/storage';
+import { checkDietaryConflicts } from '@/lib/dietary';
 
 interface Props {
   items: FoodItem[];
   warnings: string[];
+  dishName?: string;
 }
 
-export default function ComponentBreakdown({ items, warnings }: Props) {
+export default function ComponentBreakdown({ items, warnings, dishName }: Props) {
   const [open, setOpen] = useState(false);
+  const [conflicts, setConflicts] = useState<string[]>([]);
+
+  useEffect(() => {
+    const prefs = getProfile()?.dietaryPrefs;
+    setConflicts(checkDietaryConflicts({ items, warnings, dishName }, prefs));
+  }, [items, warnings, dishName]);
+
   const allHidden = items.flatMap((item) =>
     item.hiddenIngredients.map((ing) => ({ item: item.name, ingredient: ing }))
   );
 
-  if (allHidden.length === 0 && warnings.length === 0) return null;
+  if (allHidden.length === 0 && warnings.length === 0 && conflicts.length === 0) return null;
 
   return (
+    <div className="space-y-2">
+      {/* Dietary conflict banner */}
+      {conflicts.length > 0 && (
+        <div className="rounded-xl border p-3 space-y-1.5"
+          style={{ borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}>
+          <div className="flex items-center gap-2">
+            <Ban size={13} style={{ color: '#ef4444' }} />
+            <p className="text-xs font-semibold" style={{ color: '#ef4444' }}>
+              Doesn&apos;t match your dietary preferences
+            </p>
+          </div>
+          {conflicts.map((c, i) => (
+            <p key={i} className="text-xs pl-5" style={{ color: '#ef4444' }}>{c}</p>
+          ))}
+        </div>
+      )}
+
+    {(allHidden.length > 0 || warnings.length > 0) && (
     <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
       <button
         onClick={() => setOpen((o) => !o)}
@@ -79,6 +107,8 @@ export default function ComponentBreakdown({ items, warnings }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+    )}
     </div>
   );
 }

@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import {
-  UserProfile, ActivityLevel, GoalType,
-  ACTIVITY_OPTIONS, GOAL_OPTIONS,
+  UserProfile, ActivityLevel, GoalType, DietaryPref,
+  ACTIVITY_OPTIONS, GOAL_OPTIONS, DIETARY_OPTIONS,
   calculateBMR, calculateTDEE, calculateCalorieGoal, getMacroTargets,
 } from '@/lib/bmr';
 import { getProfile, saveProfile } from '@/lib/storage';
@@ -56,6 +56,17 @@ export default function ProfilePage() {
 
   const set = <K extends keyof UserProfile>(key: K, val: UserProfile[K]) =>
     setForm(prev => ({ ...prev, [key]: val }));
+
+  const toggleDietary = (pref: DietaryPref) =>
+    setForm(prev => {
+      const current = prev.dietaryPrefs ?? [];
+      return {
+        ...prev,
+        dietaryPrefs: current.includes(pref)
+          ? current.filter(p => p !== pref)
+          : [...current, pref],
+      };
+    });
 
   const bmr  = calculateBMR(form);
   const tdee = calculateTDEE(form);
@@ -155,6 +166,33 @@ export default function ProfilePage() {
                 <span className="text-2xl">{opt.emoji}</span>
                 <p className="text-xs font-semibold leading-tight" style={{ color: active ? 'var(--accent)' : 'var(--text-1)' }}>{opt.label}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{opt.desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Dietary Preferences */}
+      <section className="p-5 rounded-xl border space-y-3"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div>
+          <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>DIETARY PREFERENCES</p>
+          <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+            We&apos;ll flag scanned meals and recipes that don&apos;t match.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {DIETARY_OPTIONS.map(opt => {
+            const active = (form.dietaryPrefs ?? []).includes(opt.id);
+            return (
+              <button key={opt.id} onClick={() => toggleDietary(opt.id)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  background: active ? 'rgba(201,100,66,0.12)' : 'var(--surface-2)',
+                  border: `1.5px solid ${active ? 'var(--accent)' : 'transparent'}`,
+                  color: active ? 'var(--accent)' : 'var(--text-1)',
+                }}>
+                <span>{opt.emoji}</span> {opt.label}
               </button>
             );
           })}

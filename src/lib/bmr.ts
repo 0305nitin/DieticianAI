@@ -1,5 +1,6 @@
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 export type GoalType = 'lose' | 'maintain' | 'gain';
+export type DietaryPref = 'halal' | 'vegetarian' | 'vegan' | 'low-sodium' | 'gluten-free';
 
 export interface UserProfile {
   name?: string;
@@ -9,7 +10,16 @@ export interface UserProfile {
   weightKg: number;
   activityLevel: ActivityLevel;
   goal: GoalType;
+  dietaryPrefs?: DietaryPref[];
 }
+
+export const DIETARY_OPTIONS: { id: DietaryPref; label: string; emoji: string }[] = [
+  { id: 'halal',       label: 'Halal',        emoji: '🕌' },
+  { id: 'vegetarian',  label: 'Vegetarian',   emoji: '🥦' },
+  { id: 'vegan',       label: 'Vegan',        emoji: '🌱' },
+  { id: 'low-sodium',  label: 'Low sodium',   emoji: '🧂' },
+  { id: 'gluten-free', label: 'Gluten-free',  emoji: '🌾' },
+];
 
 const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   sedentary: 1.2,
