@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Award } from 'lucide-react';
+import { Flame, Award, Share2, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { getAllScans, getMonthlyLogs, getDailyLog } from '@/lib/storage';
 import { scaledNutrition, sumNutrition, GRADE_COLORS } from '@/lib/nutrition';
@@ -9,6 +9,7 @@ import { NutriGrade, ScanResult, DAILY_TARGETS } from '@/lib/types';
 import { useProfile } from '@/hooks/useProfile';
 import { calculateCalorieGoal, getMacroTargets } from '@/lib/bmr';
 import { formatDateShort } from '@/lib/utils';
+import WeeklyReportCard, { WeeklyReportData } from '@/components/insights/WeeklyReportCard';
 
 function computeStreak(): number {
   let streak = 0;
@@ -30,7 +31,10 @@ export default function InsightsPage() {
   const [streak, setStreak] = useState(0);
   const [gradeAMeals, setGradeAMeals] = useState(0);
   const [avgMacros, setAvgMacros] = useState({ protein: 0, carbs: 0, fat: 0 });
+  const [totalScans, setTotalScans] = useState(0);
   const [hasData, setHasData] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const targets = profile
     ? getMacroTargets(calculateCalorieGoal(profile), profile.goal)
@@ -42,6 +46,7 @@ export default function InsightsPage() {
     const logs = getMonthlyLogs();
 
     setHasData(allScans.length > 0);
+    setTotalScans(allScans.length);
     setStreak(computeStreak());
     setGradeAMeals(allScans.filter(s => s.nutriGrade === 'A').length);
 
@@ -94,15 +99,65 @@ export default function InsightsPage() {
 
   const calMax = Math.max(...calData.map(d => d.calories), targets.calories, 1);
 
+  const week = calData.slice(-7);
+  const reportData: WeeklyReportData = {
+    weekDays: week.map(d => ({ label: formatDateShort(d.date).split(' ')[0], calories: d.calories })),
+    targetCalories: targets.calories,
+    avg: avgMacros,
+    macroTargets: { protein: targets.protein, carbs: targets.carbs, fat: targets.fat },
+    streak, gradeAMeals, totalScans,
+    dateRange: week.length ? `${formatDateShort(week[0].date)} – ${formatDateShort(week[week.length - 1].date)}` : '',
+  };
+
+  const handleExport = async () => {
+    if (!cardRef.current || exporting) return;
+    setExporting(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(cardRef.current, { scale: 2, backgroundColor: '#262624', logging: false, useCORS: true });
+      const blob: Blob | null = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      if (!blob) throw new Error('render failed');
+      const file = new File([blob], 'dieticianai-weekly-report.png', { type: 'image/png' });
+      const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'My weekly nutrition report' });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = file.name; a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      if (!(e instanceof Error) || e.name !== 'AbortError') console.error(e);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto px-5 py-10 space-y-5">
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-1)' }}>
-          Insights
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--text-2)' }}>Your nutrition trends at a glance</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-1)' }}>
+            Insights
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Your nutrition trends at a glance</p>
+        </div>
+        {hasData && (
+          <button onClick={handleExport} disabled={exporting}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors disabled:opacity-50"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
+            {exporting ? <Loader2 size={13} className="animate-spin" /> : <Share2 size={13} style={{ color: 'var(--accent)' }} />}
+            {exporting ? 'Rendering…' : 'Share report'}
+          </button>
+        )}
+      </div>
+
+      {/* Off-screen capture target for the weekly report image */}
+      <div style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none', opacity: 0 }} aria-hidden>
+        <WeeklyReportCard ref={cardRef} data={reportData} />
       </div>
 
       {!hasData ? (

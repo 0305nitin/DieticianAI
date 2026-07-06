@@ -7,6 +7,7 @@ import MultiPhotoUpload, { PhotoSlot } from '@/components/scanner/MultiPhotoUplo
 import ScannerCamera from '@/components/scanner/ScannerCamera';
 import ContainerPicker from '@/components/scanner/ContainerPicker';
 import ModelPicker from '@/components/scanner/ModelPicker';
+import BarcodeInput from '@/components/scanner/BarcodeInput';
 import FreemiumBadge from '@/components/ui/FreemiumBadge';
 import PremiumModal from '@/components/ui/PremiumModal';
 import { useFreemium } from '@/hooks/useFreemium';
@@ -15,7 +16,7 @@ import { useScans } from '@/hooks/useScans';
 import { generateId } from '@/lib/utils';
 import { ScanResult, ModelChoice, ContainerType } from '@/lib/types';
 
-type Tab = 'upload' | 'camera';
+type Tab = 'upload' | 'camera' | 'barcode';
 
 const loadingSteps = [
   'Identifying food items…',
@@ -117,21 +118,25 @@ export default function ScanPage() {
 
       {/* Tab switcher */}
       <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--surface)' }}>
-        {(['upload', 'camera'] as Tab[]).map(t => (
+        {([['upload', '↑ Upload'], ['camera', '⊙ Camera'], ['barcode', '▤ Barcode']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => { setTab(t); clearAll(); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium transition-all"
             style={{
               background: tab === t ? 'var(--accent)' : 'transparent',
               color: tab === t ? '#fff' : 'var(--text-2)',
             }}>
-            {t === 'upload' ? '↑ Upload' : '⊙ Camera'}
+            {label}
           </button>
         ))}
       </div>
 
       {/* Photo input area */}
       <AnimatePresence mode="wait">
-        {tab === 'upload' ? (
+        {tab === 'barcode' ? (
+          <motion.div key="barcode" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <BarcodeInput />
+          </motion.div>
+        ) : tab === 'upload' ? (
           <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <MultiPhotoUpload photos={photos} onChange={setPhotos} maxPhotos={3} />
           </motion.div>
