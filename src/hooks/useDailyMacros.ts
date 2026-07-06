@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DailyMacros, ScanResult } from '@/lib/types';
-import { getDailyLog, getScanById, getWeeklyLogs } from '@/lib/storage';
+import { getAllScans, getDailyLog, getWeeklyLogs } from '@/lib/storage';
 import { scaledNutrition, sumNutrition } from '@/lib/nutrition';
 
 function getTodayString() {
@@ -13,33 +13,27 @@ export function useDailyMacros() {
   const [todayScans, setTodayScans] = useState<ScanResult[]>([]);
   const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number }[]>([]);
 
-  useEffect(() => {
-    const today = getTodayString();
-    const log = getDailyLog(today);
-    const scans = log.scanIds.map((id) => getScanById(id)).filter(Boolean) as ScanResult[];
+  const refresh = useCallback(() => {
+    // Resolve scan IDs against a single map so lookups stay O(n) overall.
+    const scanMap = new Map(getAllScans().map((s) => [s.id, s]));
+    const resolve = (ids: string[]) =>
+      ids.map((id) => scanMap.get(id)).filter(Boolean) as ScanResult[];
+
+    const scans = resolve(getDailyLog(getTodayString()).scanIds);
     setTodayScans(scans);
 
-    const totals = sumNutrition(
-      scans.map((s) => scaledNutrition(s.totalNutrition, s.portionMultiplier))
-    );
-    setMacros({
-      calories: totals.calories,
-      protein: totals.protein,
-      carbs: totals.carbs,
-      fat: totals.fat,
-    });
+    const totals = sumNutrition(scans.map((s) => scaledNutrition(s.totalNutrition, s.portionMultiplier)));
+    setMacros({ calories: totals.calories, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
 
-    const weekly = getWeeklyLogs().map((log) => {
-      const dayScans = log.scanIds
-        .map((id) => getScanById(id))
-        .filter(Boolean) as ScanResult[];
-      const dayTotals = sumNutrition(
-        dayScans.map((s) => scaledNutrition(s.totalNutrition, s.portionMultiplier))
-      );
-      return { date: log.date, calories: dayTotals.calories };
-    });
-    setWeeklyCalories(weekly);
+    setWeeklyCalories(
+      getWeeklyLogs().map((log) => {
+        const dayTotals = sumNutrition(resolve(log.scanIds).map((s) => scaledNutrition(s.totalNutrition, s.portionMultiplier)));
+        return { date: log.date, calories: dayTotals.calories };
+      })
+    );
   }, []);
 
-  return { macros, todayScans, weeklyCalories };
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { macros, todayScans, weeklyCalories, refresh };
 }

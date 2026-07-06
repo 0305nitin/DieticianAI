@@ -37,15 +37,19 @@ export function sumNutrition(items: TotalNutrition[]): TotalNutrition {
   );
 }
 
+export const GRADE_COLORS: Record<NutriGrade, string> = {
+  A: '#10b981',
+  B: '#22c55e',
+  C: '#eab308',
+  D: '#f97316',
+  E: '#ef4444',
+};
+
+/** Shared "success / confirmed" green — matches grade A so states don't clash. */
+export const SUCCESS_GREEN = '#10b981';
+
 export function nutriGradeColor(grade: NutriGrade): string {
-  const map: Record<NutriGrade, string> = {
-    A: '#10b981',
-    B: '#22c55e',
-    C: '#eab308',
-    D: '#f97316',
-    E: '#ef4444',
-  };
-  return map[grade];
+  return GRADE_COLORS[grade];
 }
 
 export function nutriGradeLabel(grade: NutriGrade): string {

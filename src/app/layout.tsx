@@ -7,9 +7,9 @@ import Navbar from '@/components/ui/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'HawkerSense — AI Food Scanner for Asian Dishes',
+  title: 'DieticianAI — AI Nutrition Scanner for Asian Food',
   description:
-    'Snap a photo of your hawker meal and get instant calorie counts, macro breakdowns, and hidden ingredient analysis powered by Gemini AI.',
+    'Snap a photo of any Asian or hawker meal and get instant calorie counts, macro breakdowns, hidden-ingredient analysis, and personalised daily targets — powered by AI.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
